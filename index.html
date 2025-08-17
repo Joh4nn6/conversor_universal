@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Conversor Universal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- External libraries for Markdown parsing and exports -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.1.4/docx.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+  <!-- Encabezado con animación -->
+  <header class="hero">
+    <h1><span class="icon">⚡</span> Conversor <span class="gradient">Universal</span></h1>
+    <p>Convierte <strong>Markdown</strong> y <strong>HTML</strong> a múltiples formatos — con estilo galáctico.</p>
+  </header>
+
+  <!-- Zona principal con editor y vista previa -->
+  <main class="main-grid">
+    <section class="editor glass">
+      <label for="input">✍️ Tu contenido (MD/HTML)</label>
+      <textarea id="input" placeholder="# Hola universo 🌌&#10;**Negrita**, _cursiva_, `código`…"></textarea>
+      <input type="file" id="fileInput" accept=".md,.html,.txt" />
+    </section>
+    <section class="preview glass">
+      <h3>👀 Vista Previa</h3>
+      <div id="preview"></div>
+    </section>
+  </main>
+
+  <!-- Acciones de exportación y limpieza -->
+  <div class="actions">
+    <button class="btn btn-primary" onclick="exportPDF()">Exportar a PDF</button>
+    <button class="btn btn-primary" onclick="exportDOCX()">Exportar a DOCX</button>
+    <button class="btn btn-primary" onclick="exportPNG()">Exportar a PNG</button>
+    <button class="btn btn-primary" onclick="exportTXT()">Exportar a TXT</button>
+    <button class="btn btn-primary" onclick="exportMD()">Exportar a MD</button>
+    <button class="btn btn-ghost" onclick="clearText()">Limpiar</button>
+  </div>
+
+  <script>
+    // Referencias a elementos del DOM
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
+
+    /**
+     * Actualiza la vista previa convirtiendo el contenido Markdown/HTML
+     * en HTML utilizando la librería `marked`.
+     */
+    function updatePreview() {
+      const text = input.value || '';
+      const html = marked.parse(text);
+      preview.innerHTML = html;
+    }
+
+    // Render inicial
+    updatePreview();
+
+    // Actualizar la vista previa cada vez que se edite el texto
+    input.addEventListener('input', updatePreview);
+
+    // Cargar archivos locales y mostrar su contenido en el editor
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          input.value = ev.target.result;
+          updatePreview();
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    /**
+     * Limpia el editor y la vista previa.
+     */
+    function clearText() {
+      input.value = '';
+      preview.innerHTML = '';
+    }
+
+    /**
+     * Exporta el contenido renderizado como PDF.
+     * Utiliza html2canvas para capturar la vista previa y jsPDF para generar el PDF.
+     */
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      html2canvas(preview).then((canvas) => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+        pdf.save('output.pdf');
+      });
+    }
+
+    /**
+     * Exporta el contenido como documento DOCX.
+     * Utiliza la librería `docx` para generar un documento con cada línea como un párrafo.
+     */
+    function exportDOCX() {
+      const { Document, Packer, Paragraph } = window.docx;
+      const text = input.value || '';
+      const paragraphs = text.split('\n').map((line) => new Paragraph(line));
+      const doc = new Document({
+        sections: [
+          {
+            properties: {},
+            children: paragraphs,
+          },
+        ],
+      });
+      Packer.toBlob(doc).then((blob) => {
+        saveAs(blob, 'output.docx');
+      });
+    }
+
+    /**
+     * Exporta la vista previa como imagen PNG.
+     */
+    function exportPNG() {
+      html2canvas(preview).then((canvas) => {
+        canvas.toBlob((blob) => {
+          saveAs(blob, 'output.png');
+        });
+      });
+    }
+
+    /**
+     * Exporta el contenido en texto plano.
+     */
+    function exportTXT() {
+      const blob = new Blob([input.value || ''], { type: 'text/plain;charset=utf-8' });
+      saveAs(blob, 'output.txt');
+    }
+
+    /**
+     * Exporta el contenido en formato Markdown.
+     */
+    function exportMD() {
+      const blob = new Blob([input.value || ''], { type: 'text/markdown;charset=utf-8' });
+      saveAs(blob, 'output.md');
+    }
+  </script>
+</body>
+</html>
