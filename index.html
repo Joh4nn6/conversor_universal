@@ -2,48 +2,24 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Conversor Universal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <!-- Tu CSS habitual -->
   <link rel="stylesheet" href="styles.css" />
-
-  <!-- Librerías -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.1.4/docx.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- html2pdf para PDF multipágina -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <!-- 🔽 Tema de impresión (se activa SOLO en exportación) -->
+  <!-- Estilos solo para imprimir/exportar -->
   <style>
-    /* Cuando agreguemos .print al preview, forzamos PDF limpio */
     #preview.print,
-    #preview.print *{
-      color:#111 !important;
+    #preview.print * {
       background:#fff !important;
+      color:#000 !important;
       text-shadow:none !important;
       box-shadow:none !important;
       filter:none !important;
-      -webkit-text-fill-color:#111 !important;
     }
-    /* Ajustes de tipografía al imprimir */
-    #preview.print{
-      font-family: system-ui, Segoe UI, Roboto, Ubuntu, Arial, sans-serif !important;
-      line-height:1.45 !important;
-      padding:16px !important;
-      border: none !important;
-    }
-    #preview.print h1{ font-size: 24px !important; margin: 0 0 12px !important; }
-    #preview.print h2{ font-size: 20px !important; margin: 18px 0 8px !important; }
-    #preview.print h3{ font-size: 17px !important; margin: 16px 0 6px !important; }
-    #preview.print p, #preview.print li, #preview.print blockquote{ font-size: 12.5px !important; }
-    #preview.print pre, #preview.print code{
-      background:#f3f3f3 !important; color:#111 !important; border:1px solid #e0e0e0 !important;
-    }
-    /* Evitar que el fondo galáctico/blur se cuele en el PDF */
-    body.exporting::before,
-    body.exporting::after{ display:none !important; }
   </style>
 </head>
 <body>
@@ -55,11 +31,9 @@
   <main class="main-grid">
     <section class="editor glass">
       <label for="input">✍️ Tu contenido (MD/HTML)</label>
-      <textarea id="input" placeholder="# Hola universo 🌌
-**Negrita**, _cursiva_, `código`…"></textarea>
-      <input type="file" id="fileInput" accept=".md,.markdown,.txt,.html,.htm" />
+      <textarea id="input" placeholder="# Hola universo\nAquí puedes usar <span style='color:red'>HTML con colores</span> si lo necesitas."></textarea>
+      <input type="file" id="fileInput" accept=".md,.markdown,.txt,.html,.htm"/>
     </section>
-
     <section class="preview glass">
       <h3>👀 Vista Previa</h3>
       <div id="preview"></div>
@@ -76,93 +50,89 @@
   </div>
 
   <script>
-    const $ = s => document.querySelector(s);
-    const input = $('#input');
-    const preview = $('#preview');
+    // Obtén elementos
+    const input = document.getElementById('input');
+    const preview = document.getElementById('preview');
 
-    // Render en vivo (Markdown -> HTML)
-    function render(){
-      preview.innerHTML = marked.parse(input.value || '', { breaks:true });
+    // Limpia front‑matter YAML (entre --- y --- al inicio)
+    function stripFrontMatter(md) {
+      return md.replace(/^---[\\s\\S]*?---\\s*/, '');
+    }
+
+    // Renderiza en vivo
+    function render() {
+      const text = stripFrontMatter(input.value || '');
+      preview.innerHTML = marked.parse(text, { breaks:true });
     }
     input.addEventListener('input', render);
     render();
 
-    // Cargar archivo
-    $('#fileInput').addEventListener('change', async e=>{
-      const file = e.target.files?.[0]; if(!file) return;
+    // Cargar archivos
+    document.getElementById('fileInput').addEventListener('change', async e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
       const text = await file.text();
-      input.value = text; render();
+      input.value = text;
+      render();
     });
 
     // Limpiar
-    function clearText(){ input.value=''; render(); }
+    function clearText() { input.value = ''; render(); }
 
-    // —— Exportaciones ——
-
-    // PDF (multipágina, tema de impresión forzado)
-    async function exportPDF(){
-      if(!input.value.trim()) return alert('No hay contenido para exportar.');
-      // Forzar “modo exportación” (sin fondo/blur) y tema de impresión
+    // Exportar PDF con html2pdf.js
+    async function exportPDF() {
+      const text = stripFrontMatter(input.value || '');
+      if (!text.trim()) return alert('Sin contenido.');
+      // Forzar estilo claro
       document.body.classList.add('exporting');
       preview.classList.add('print');
-
-      const opt = {
-        margin: 10, // mm
-        filename: 'output.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, backgroundColor: '#ffffff', logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      try{
-        await html2pdf().from(preview).set(opt).save();
-      } finally{
-        // Restablecer tema UI
+      try {
+        await html2pdf().from(preview).set({
+          margin: 10,
+          filename: 'documento.pdf',
+          image: { type:'jpeg', quality:0.98 },
+          html2canvas: { scale:2, backgroundColor:'#ffffff', logging:false },
+          jsPDF: { unit:'mm', format:'a4', orientation:'portrait' }
+        }).save();
+      } finally {
         preview.classList.remove('print');
         document.body.classList.remove('exporting');
       }
     }
 
-    // DOCX (texto plano por párrafos)
-    function exportDOCX(){
-      if(!input.value.trim()) return alert('No hay contenido para exportar.');
+    // DOCX
+    function exportDOCX() {
+      const text = stripFrontMatter(input.value || '');
+      if (!text.trim()) return alert('Sin contenido.');
       const { Document, Packer, Paragraph } = window.docx;
-      const paragraphs = (input.value || '').split(/\r?\n/).map(l => new Paragraph({ text: l }));
-      const doc = new Document({ sections: [{ children: paragraphs }] });
-      Packer.toBlob(doc).then(b => saveAs(b, 'output.docx'));
+      const paragraphs = text.split(/\\n/).map(l => new Paragraph(l));
+      const doc = new Document({ sections:[{ children: paragraphs }] });
+      Packer.toBlob(doc).then(blob => saveAs(blob, 'documento.docx'));
     }
 
-    // PNG (de la vista previa, con fondo blanco)
-    async function exportPNG(){
-      if(!input.value.trim()) return alert('No hay contenido para exportar.');
-      // Tema de impresión para asegurar contraste en PNG
+    // PNG
+    function exportPNG() {
+      const text = stripFrontMatter(input.value || '');
+      if (!text.trim()) return alert('Sin contenido.');
       preview.classList.add('print');
-      try{
-        const canvas = await html2canvas(preview, { scale:2, backgroundColor:'#ffffff' });
-        canvas.toBlob(b => saveAs(b, 'output.png'));
-      } finally{
+      html2canvas(preview, { scale:2, backgroundColor:'#ffffff' }).then(canvas => {
+        canvas.toBlob(blob => saveAs(blob, 'documento.png'));
         preview.classList.remove('print');
-      }
+      });
     }
 
-    // TXT / MD
-    function exportTXT(){
-      if(!input.value.trim()) return alert('No hay contenido para exportar.');
-      const blob = new Blob([input.value], { type:'text/plain;charset=utf-8' });
-      saveAs(blob, 'output.txt');
+    // TXT y MD
+    function exportTXT() {
+      const text = stripFrontMatter(input.value || '');
+      if (!text.trim()) return alert('Sin contenido.');
+      const blob = new Blob([text], { type:'text/plain;charset=utf-8' });
+      saveAs(blob, 'documento.txt');
     }
-    function exportMD(){
-      if(!input.value.trim()) return alert('No hay contenido para exportar.');
-      const blob = new Blob([input.value], { type:'text/markdown;charset=utf-8' });
-      saveAs(blob, 'output.md');
-    }
-
-    // Ejemplo inicial
-    if(!input.value.trim()){
-      input.value = `## Respuesta – Propuesta de Reemplazo con Papel Glassine
-
-El desafío planteado por Legrand Chile consiste en diseñar un **packaging primario sustentable** que elimine el plástico de un solo uso antes del 2030...
-`;
-      render();
+    function exportMD() {
+      const text = stripFrontMatter(input.value || '');
+      if (!text.trim()) return alert('Sin contenido.');
+      const blob = new Blob([text], { type:'text/markdown;charset=utf-8' });
+      saveAs(blob, 'documento.md');
     }
   </script>
 </body>
