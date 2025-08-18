@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversor</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Cargar librerías desde CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.9.3/dist/html2pdf.bundle.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="glow-text">Conversor</h1>
+    <div class="top-actions">
+      <button id="themeToggle" class="btn" aria-label="Cambiar tema claro/oscuro" title="Cambiar tema claro/oscuro">🌗</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel editor-panel" aria-label="Editor">
+      <div class="panel-header">
+        <label for="file" class="sr-only">Cargar archivo</label>
+        <input id="file" type="file" accept=".md,.markdown,.txt,.html,.htm" />
+        <div class="inline-actions">
+          <button id="pasteBtn" class="btn" title="Pegar desde portapapeles">📋 Pegar</button>
+          <button id="clearBtn" class="btn" title="Limpiar">🧹 Limpiar</button>
+        </div>
+      </div>
+      <label for="input" class="label">Markdown o HTML</label>
+      <textarea id="input" placeholder="Pega aquí tu Markdown o HTML..."></textarea>
+      <div class="stats" aria-live="polite">
+        <span id="charCount">0</span> caracteres • <span id="wordCount">0</span> palabras
+      </div>
+      <div class="actions">
+        <button id="pdfBtn" class="btn primary">Exportar PDF</button>
+        <button id="docxBtn" class="btn">Exportar DOCX</button>
+        <button id="pngBtn" class="btn">Exportar PNG</button>
+        <button id="txtBtn" class="btn">Exportar TXT</button>
+        <button id="mdBtn" class="btn">Exportar MD</button>
+      </div>
+    </section>
+    <section class="panel preview-panel" aria-label="Previsualización">
+      <div class="preview-wrap">
+        <div id="preview" class="paper" aria-label="Hoja de previsualización"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>PDF siempre exporta con fondo blanco y texto negro. Colores inline en HTML se respetan.</small>
+  </footer>
+
+  <script>
+    // Elimina YAML front-matter al inicio
+    function stripFrontMatter(text) {
+      const fm = text.match(/^\s*---[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]?/);
+      if (fm) {
+        return text.slice(fm[0].length);
+      }
+      return text;
+    }
+
+    // Sanitiza HTML eliminando scripts, iframes y atributos on*
+    function sanitizeHTML(dirtyHtml) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(dirtyHtml, "text/html");
+      ["script", "iframe"].forEach(tag => {
+        doc.querySelectorAll(tag).forEach(n => n.remove());
+      });
+      const tree = doc.body || doc;
+      const walker = document.createTreeWalker(tree, NodeFilter.SHOW_ELEMENT);
+      while (walker.nextNode()) {
+        const el = walker.currentNode;
+        Array.from(el.attributes).forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const val = (attr.value || "").trim();
+          if (name.startsWith("on")) {
+            el.removeAttribute(attr.name);
+          }
+          if ((name === "href" || name === "src") && /^javascript:/i.test(val)) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      }
+      return (doc.body && doc.body.innerHTML) || "";
+    }
+
+    function looksLikeHTML(text) {
+      const t = text.trim();
+      if (t.startsWith("<")) return true;
+      return /<\/?[a-z][\s\S]*>/i.test(t);
+    }
+
+    function htmlToPlainText(html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      return doc.body.textContent || "";
+    }
+
+    // Elementos
+    const inputEl = document.getElementById("input");
+    const previewEl = document.getElementById("preview");
+    const charCountEl = document.getElementById("charCount");
+    const wordCountEl = document.getElementById("wordCount");
+
+    function updateStats(text) {
+      charCountEl.textContent = text.length.toString();
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      wordCountEl.textContent = (words.length || 0).toString();
+    }
+
+    function render() {
+      const raw = inputEl.value || "";
+      updateStats(raw);
+      const withoutFM = stripFrontMatter(raw);
+      let html = "";
+      if (looksLikeHTML(withoutFM)) {
+        // Si ya parece HTML, solo sanitizar
+        html = sanitizeHTML(withoutFM);
+      } else if (typeof marked !== "undefined" && typeof marked.parse === "function") {
+        // Si la librería marked está disponible, intenta parsear Markdown
+        try {
+          const mdHtml = marked.parse(withoutFM, { breaks: true, gfm: true });
+          html = sanitizeHTML(mdHtml);
+        } catch (e) {
+          // Si falla el parser, usar fallback sin error visible
+          html = sanitizeHTML(withoutFM.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
+        }
+      } else {
+        // Fallback cuando marked no esté disponible: se muestran saltos de línea y se escapan etiquetas
+        html = sanitizeHTML(withoutFM.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
+      }
+      previewEl.innerHTML = html;
+    }
+
+    /**
+     * Convierte imágenes externas dentro de la previsualización a Data URIs.
+     * Esto evita que html2canvas taint el canvas por CORS al exportar a PDF/PNG.
+     */
+    async function embedRemoteImages() {
+      const imgs = previewEl.querySelectorAll('img');
+      const tasks = Array.from(imgs).map(img => {
+        const src = img.getAttribute('src');
+        // omitir si ya es data URI o está vacía
+        if (!src || src.startsWith('data:')) return Promise.resolve();
+        try {
+          const url = new URL(src, window.location.href);
+          // Si es del mismo origen, no necesita conversión
+          if (url.origin === window.location.origin) return Promise.resolve();
+        } catch (e) {
+          // Si falla URL (por ejemplo, relativa), se omitirá
+          return Promise.resolve();
+        }
+        // Descarga la imagen y conviértela a Data URI
+        return fetch(src).then(res => res.blob()).then(blob => new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            img.src = reader.result;
+            resolve();
+          };
+          reader.onerror = () => resolve();
+          reader.readAsDataURL(blob);
+        })).catch(() => {
+          // Si falla la descarga, se ignora
+        });
+      });
+      return Promise.all(tasks);
+    }
+
+    inputEl.addEventListener("input", render);
+
+    // Carga de archivos
+    document.getElementById("file").addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      inputEl.value = text;
+      render();
+    });
+
+    // Botones utilitarios
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      inputEl.value = "";
+      render();
+    });
+    document.getElementById("pasteBtn").addEventListener("click", async () => {
+      try {
+        const txt = await navigator.clipboard.readText();
+        if (txt) {
+          inputEl.value = txt;
+          render();
+        }
+      } catch (err) {
+        alert("No se pudo pegar desde el portapapeles. Permite el acceso o pega manualmente (Ctrl/Cmd+V).");
+      }
+    });
+
+    // Exportadores
+    function addPdfHeaderFooter(jsPdf, titleText = "Conversor Universal") {
+      const totalPages = jsPdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        jsPdf.setPage(i);
+        jsPdf.setFontSize(9);
+        jsPdf.setTextColor(80);
+        jsPdf.text(titleText, 14, 10);
+        jsPdf.text(`Página ${i} / ${totalPages}`, jsPdf.internal.pageSize.getWidth() - 14, jsPdf.internal.pageSize.getHeight() - 10, { align: "right" });
+      }
+    }
+
+    async function exportPDF() {
+      // Convertir imágenes remotas a data URI antes de exportar para evitar problemas de CORS
+      await embedRemoteImages();
+      if (typeof html2pdf === "undefined" || typeof html2pdf !== "function") {
+        alert("La librería html2pdf.js no está cargada o no está disponible. Verifica la conexión o los scripts.");
+        return;
+      }
+      document.body.classList.add("exporting");
+      previewEl.classList.add("print");
+      const opt = {
+        margin: [10, 12, 12, 12],
+        filename: "documento.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        // html2canvas con opciones de CORS para permitir imágenes externas
+        html2canvas: { scale: 2, backgroundColor: "#ffffff", useCORS: true, allowTaint: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["css", "legacy"] }
+      };
+      try {
+        const worker = html2pdf().set(opt).from(previewEl);
+        const pdf = await worker.toPdf().get("pdf");
+        addPdfHeaderFooter(pdf, "Conversor Universal");
+        pdf.save(opt.filename);
+      } catch (err) {
+        alert("No se pudo exportar a PDF.");
+        console.error(err);
+      } finally {
+        previewEl.classList.remove("print");
+        document.body.classList.remove("exporting");
+      }
+    }
+
+    async function exportPNG() {
+      if (typeof html2canvas === "undefined") {
+        alert("La librería html2canvas no está cargada o no está disponible. Verifica la conexión o los scripts.");
+        return;
+      }
+      document.body.classList.add("exporting");
+      previewEl.classList.add("print");
+      try {
+        // Convertir imágenes remotas a Data URIs para evitar CORS
+        await embedRemoteImages();
+        const canvas = await html2canvas(previewEl, { backgroundColor: "#ffffff", scale: 2, useCORS: true, allowTaint: true });
+        canvas.toBlob((blob) => {
+          if (blob) saveAs(blob, "captura.png");
+        });
+      } catch (err) {
+        alert("No se pudo exportar a PNG.");
+        console.error(err);
+      } finally {
+        previewEl.classList.remove("print");
+        document.body.classList.remove("exporting");
+      }
+    }
+
+    async function exportDOCX() {
+      const { Document, Packer, Paragraph } = window.docx;
+      const raw = stripFrontMatter(inputEl.value || "");
+      const plain = looksLikeHTML(raw) ? htmlToPlainText(raw) : raw;
+      const lines = plain.replace(/\r\n/g, "\n").split("\n");
+      const paragraphs = lines.map(line => new Paragraph({ text: line }));
+      const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
+      try {
+        const blob = await Packer.toBlob(doc);
+        saveAs(blob, "documento.docx");
+      } catch (err) {
+        alert("No se pudo exportar a DOCX.");
+        console.error(err);
+      }
+    }
+
+    function exportTXT() {
+      const raw = stripFrontMatter(inputEl.value || "");
+      const text = looksLikeHTML(raw) ? htmlToPlainText(raw) : raw;
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      saveAs(blob, "documento.txt");
+    }
+
+    function exportMD() {
+      const cleaned = stripFrontMatter(inputEl.value || "");
+      const blob = new Blob([cleaned], { type: "text/markdown;charset=utf-8" });
+      saveAs(blob, "documento.md");
+    }
+
+    document.getElementById("pdfBtn").addEventListener("click", exportPDF);
+    document.getElementById("pngBtn").addEventListener("click", exportPNG);
+    document.getElementById("docxBtn").addEventListener("click", exportDOCX);
+    document.getElementById("txtBtn").addEventListener("click", exportTXT);
+    document.getElementById("mdBtn").addEventListener("click", exportMD);
+
+    // Tema oscuro/claro
+    const themeToggle = document.getElementById("themeToggle");
+    const THEME_KEY = "cu-theme";
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+    }
+    function initTheme() {
+      const stored = localStorage.getItem(THEME_KEY);
+      applyTheme(stored || "dark");
+    }
+    themeToggle.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme || "dark";
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+      localStorage.setItem(THEME_KEY, next);
+    });
+    initTheme();
+
+    // Render inicial
+    render();
+  </script>
+</body>
+</html>
