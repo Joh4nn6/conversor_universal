@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversor Ultra Pro</title>
+  <!-- Ícono en forma de emoji robótico -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+  <!-- Metadatos básicos para SEO -->
+  <meta name="description" content="Conversor profesional de Markdown, HTML y texto plano a múltiples formatos (PDF, DOCX, PNG, HTML, TXT, MD) con vista previa en tiempo real y diseño premium." />
+  <meta property="og:title" content="Conversor Ultra Pro" />
+  <meta property="og:description" content="Aplicación ultra premium para convertir Markdown, HTML y texto plano con vista previa en tiempo real y exportaciones de alta calidad" />
+  <meta property="og:type" content="website" />
+
+  <!-- Cargar librerías desde CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.9.3/dist/html2pdf.bundle.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- Estilos integrados -->
+  <style>
+    /* Paleta y configuración base */
+    :root {
+      /* Paleta de colores principal (tema oscuro) */
+      --bg-primary: linear-gradient(135deg, #0a0e1a 0%, #1a1a2e 50%, #16213e 100%);
+      --bg-secondary: rgba(26, 34, 52, 0.95);
+      --bg-glass: rgba(26, 34, 52, 0.8);
+      --bg-panel: #1a2234;
+      --border-color: #2a3441;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --accent-primary: #dc2626;
+      /* Rojo intenso para botones de acción principal */
+      --accent-red: #dc2626;
+      /* Borde neón para efectos luminosos */
+      --border-neon: rgba(99, 102, 241, 0.3);
+      --accent-blue: #2563eb;
+      --accent-purple: #7c3aed;
+      --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+      /* Sombras cinematográficas */
+      --shadow-ambient: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      --shadow-elevation-1: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+      --shadow-elevation-2: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+      --shadow-elevation-3: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+      --shadow-neon: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.1);
+      --shadow-paper: 0 25px 50px rgba(0, 0, 0, 0.25), 0 10px 30px rgba(0, 0, 0, 0.15);
+      /* Transiciones y easings */
+      --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      --easing-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      --easing-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --border-radius: 12px;
+    }
+    /* Tema claro opcional */
+    :root[data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-panel: #ffffff;
+      --border-color: #e2e8f0;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --accent-primary: #e50914;
+      --accent-secondary: #3b82f6;
+
+      /* Variables exclusivas del tema claro */
+      --bg-primary-light: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+      --bg-secondary-light: rgba(255, 255, 255, 0.95);
+      --text-primary-light: #0f172a;
+      --text-secondary-light: #475569;
+    }
+
+    /* Reset básicos */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background: var(--bg-primary);
+      /* Fondo galáctico animado */
+      background-image: 
+        radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 40% 80%, rgba(120, 198, 255, 0.3) 0%, transparent 50%);
+      background-attachment: fixed;
+      animation: gradientShift 20s ease infinite;
+      position: relative;
+    }
+    @keyframes gradientShift {
+      0%, 100% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(180deg); }
+    }
+
+    /* Overlay de carga */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(10, 14, 26, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(10px);
+    }
+    .loading-spinner {
+      text-align: center;
+      color: var(--text-primary);
+    }
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--border-color);
+      border-top: 3px solid var(--accent-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Encabezado */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: rgba(26, 34, 52, 0.95);
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      font-size: 24px;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+    .glow-text {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: gradientMove 8s ease infinite;
+    }
+    @keyframes gradientMove {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    .version {
+      font-size: 12px;
+      color: var(--text-secondary);
+      background: var(--accent-primary);
+      color: #ffffff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Diseño principal */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      padding: 20px;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* Panel base */
+    .panel {
+      background: rgba(26, 34, 52, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(20px);
+      position: relative;
+      overflow: hidden;
+    }
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--gradient-primary);
+      opacity: 0.7;
+    }
+
+    /* Panel superior izquierdo */
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .file-section {
+      flex: 1;
+    }
+    .file-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--bg-panel);
+      border: 2px dashed var(--border-color);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .file-label:hover {
+      border-color: var(--accent-secondary);
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-secondary);
+    }
+    .file-label input[type="file"] {
+      display: none;
+    }
+    .file-icon {
+      font-size: 18px;
+    }
+    .inline-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Barra de herramientas del editor */
+    .editor-toolbar {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 12px;
+      padding: 8px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      flex-wrap: wrap;
+    }
+    .toolbar-btn {
+      appearance: none;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+    .toolbar-btn:hover {
+      background: var(--accent-secondary);
+      color: white;
+      transform: translateY(-1px);
+    }
+    .toolbar-divider {
+      width: 1px;
+      background: var(--border-color);
+      margin: 4px 8px;
+    }
+
+    /* Etiquetas */
+    .label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    /* Contenedor del editor */
+    .editor-container {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    #input {
+      width: 100%;
+      min-height: 400px;
+      background: var(--bg-panel);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      resize: vertical;
+      transition: var(--transition);
+    }
+    #input:focus {
+      outline: none;
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    #input::placeholder {
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+    .editor-enhancements {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 40px;
+      display: flex;
+      align-items: flex-start;
+      padding-top: 16px;
+    }
+    .line-numbers {
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      padding-right: 4px;
+    }
+
+    /* Estadísticas mejoradas */
+    .stats-enhanced {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 80px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .format-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      text-transform: uppercase;
+    }
+    .format-badge.format-html {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    .format-badge.format-markdown {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+    .format-badge.format-texto {
+      background: rgba(107, 114, 128, 0.2);
+      color: #6b7280;
+    }
+
+    /* Botones de acción mejorados */
+    .actions-enhanced {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .action-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .primary-actions .btn {
+      flex: 1;
+      min-width: 140px;
+    }
+    .secondary-actions, .special-actions {
+      gap: 8px;
+    }
+
+    /* Botones */
+    .btn {
+      appearance: none;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent-secondary);
+    }
+    .btn:active {
+      transform: translateY(0);
+      transition: transform 0.1s;
+    }
+    .btn.primary {
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      font-weight: 600;
+      box-shadow: var(--shadow-md);
+    }
+    .btn.primary:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+    .btn.large {
+      padding: 16px 20px;
+      flex-direction: column;
+      min-height: 80px;
+    }
+    .btn.mini {
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+    .btn.danger:hover {
+      background: var(--error-color);
+      color: white;
+      border-color: var(--error-color);
+    }
+    .btn.special {
+      background: var(--gradient-accent);
+      color: white;
+      border: none;
+      font-weight: 600;
+    }
+    .btn-icon {
+      font-size: 18px;
+    }
+    .btn-text {
+      font-weight: 600;
+    }
+    .btn-subtitle {
+      font-size: 11px;
+      opacity: 0.8;
+      font-weight: 400;
+    }
+
+    /* Panel de vista previa */
+    .preview-panel {
+      display: flex;
+      flex-direction: column;
+    }
+    .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .preview-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .control-btn {
+      appearance: none;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .control-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--accent-secondary);
+    }
+    .control-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-color);
+      margin: 0 4px;
+    }
+    .zoom-level {
+      font-size: 12px;
+      color: var(--text-secondary);
+      min-width: 40px;
+      text-align: center;
+    }
+    .preview-info {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .preview-wrap {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow: auto;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: var(--border-radius);
+      border: 1px solid var(--border-color);
+    }
+    /* Papel de vista previa */
+    .paper {
+      background: #ffffff;
+      color: #000000;
+      width: 794px;
+      min-height: 1123px;
+      padding: 40px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-xl);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.6;
+      position: relative;
+      transition: transform 0.3s ease;
+      transform-origin: top center;
+    }
+    .paper h1, .paper h2, .paper h3, .paper h4, .paper h5, .paper h6 {
+      margin-top: 1.5em;
+      margin-bottom: 0.5em;
+      color: #1a202c;
+      font-weight: 600;
+    }
+    .paper h1 {
+      font-size: 2.25em;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 0.3em;
+    }
+    .paper h2 {
+      font-size: 1.75em;
+    }
+    .paper h3 {
+      font-size: 1.5em;
+    }
+    .paper p {
+      margin-bottom: 1em;
+      text-align: justify;
+    }
+    .paper blockquote {
+      margin: 1.5em 0;
+      padding: 1em 1.5em;
+      border-left: 4px solid #3b82f6;
+      background: #f8fafc;
+      color: #475569;
+      font-style: italic;
+      border-radius: 0 8px 8px 0;
+    }
+    .paper code {
+      background: #f1f5f9;
+      color: #e11d48;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9em;
+    }
+    .paper pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.5em;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1.5em 0;
+    }
+    .paper pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
+    .paper table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5em 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .paper th, .paper td {
+      border: 1px solid #e2e8f0;
+      padding: 12px;
+      text-align: left;
+    }
+    .paper th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #374151;
+    }
+    .paper tr:nth-child(even) {
+      background: #f9fafb;
+    }
+    .paper img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin: 1em 0;
+    }
+    .paper ul, .paper ol {
+      margin: 1em 0;
+      padding-left: 2em;
+    }
+    .paper li {
+      margin: 0.5em 0;
+    }
+    /* Tabla de contenidos */
+    .table-of-contents {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.5em;
+      margin: 2em 0;
+    }
+    .table-of-contents h2 {
+      margin-top: 0;
+      color: #374151;
+      font-size: 1.25em;
+    }
+    .table-of-contents ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 1em 0 0 0;
+    }
+    .table-of-contents li {
+      margin: 0.5em 0;
+    }
+    .table-of-contents a {
+      color: #3b82f6;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .table-of-contents a:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+    .toc-level-1 { font-weight: 600; }
+    .toc-level-2 { padding-left: 1em; }
+    .toc-level-3 { padding-left: 2em; font-size: 0.9em; }
+    .toc-level-4 { padding-left: 3em; font-size: 0.9em; }
+    /* Mensaje de bienvenida */
+    .welcome-message {
+      text-align: center;
+      padding: 60px 40px;
+      color: #64748b;
+    }
+    .welcome-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      animation: float 3s ease-in-out infinite;
+    }
+    .welcome-message h2 {
+      color: #374151;
+      margin-bottom: 16px;
+      font-size: 2em;
+    }
+    .welcome-message p {
+      font-size: 1.1em;
+      margin-bottom: 30px;
+      color: #6b7280;
+    }
+    .welcome-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 40px;
+    }
+    .feature-item {
+      background: #f1f5f9;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #475569;
+      border-left: 4px solid #3b82f6;
+    }
+    /* Modo impresión para PDF */
+    .paper.print {
+      background: #ffffff !important;
+      color: #000000 !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+    .paper.print * {
+      color: #000000;
+      background: transparent !important;
+      text-shadow: none !important;
+    }
+    /* Modales */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+    .modal-content {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-xl);
+      animation: modalSlideIn 0.3s ease;
+    }
+    @keyframes modalSlideIn {
+      from { transform: scale(0.9) translateY(-50px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .modal-header h3 {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 18px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+    .modal-close:hover {
+      background: var(--error-color);
+      color: white;
+    }
+    .modal-body {
+      padding: 24px;
+    }
+    /* Configuración */
+    .setting-group {
+      margin-bottom: 20px;
+    }
+    .setting-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .setting-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    .setting-checkbox {
+      margin-right: 8px;
+    }
+    .setting-description {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: 24px;
+    }
+    /* Plantillas */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .template-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+      text-align: center;
+    }
+    .template-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--accent-secondary);
+    }
+    .template-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+    .template-card h4 {
+      margin: 0 0 8px 0;
+      color: var(--text-primary);
+      font-size: 16px;
+    }
+    .template-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    /* Pie de página */
+    .footer-enhanced {
+      background: rgba(26, 34, 52, 0.95);
+      border-top: 1px solid var(--border-color);
+      backdrop-filter: blur(20px);
+      margin-top: 40px;
+    }
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+      padding: 32px 24px;
+    }
+    .footer-section h4 {
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .footer-section p {
+      color: var(--text-secondary);
+      font-size: 12px;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .footer-bottom {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+    }
+    .footer-bottom small {
+      color: var(--text-secondary);
+      font-size: 11px;
+    }
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .paper {
+        width: 100%;
+        max-width: 800px;
+      }
+      .preview-wrap {
+        padding: 16px;
+      }
+    }
+    @media (max-width: 768px) {
+      .topbar {
+        padding: 12px 16px;
+      }
+      .brand {
+        gap: 8px;
+      }
+      .glow-text {
+        font-size: 16px;
+      }
+      .layout {
+        padding: 16px;
+      }
+      .panel {
+        padding: 16px;
+      }
+      .panel-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .stats-enhanced {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      .actions-enhanced .action-group {
+        flex-direction: column;
+      }
+      .btn.large {
+        flex-direction: row;
+        min-height: auto;
+        padding: 12px 16px;
+      }
+      .welcome-features {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .template-grid {
+        grid-template-columns: 1fr;
+      }
+      .footer-content {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .paper {
+        padding: 24px;
+      }
+    }
+    @media (max-width: 480px) {
+      .editor-toolbar {
+        gap: 2px;
+      }
+      .toolbar-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      #input {
+        min-height: 300px;
+        padding: 12px;
+        font-size: 13px;
+      }
+      .stats-enhanced {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .stat-item {
+        min-width: auto;
+      }
+      .stat-value {
+        font-size: 14px;
+      }
+      .paper {
+        padding: 16px;
+        font-size: 14px;
+      }
+    }
+    /* Scroll personalizado */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+    /* Selección de texto */
+    ::selection {
+      background: rgba(59, 130, 246, 0.3);
+      color: var(--text-primary);
+    }
+    ::-moz-selection {
+      background: rgba(59, 130, 246, 0.3);
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Overlay de carga -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Procesando...</p>
+    </div>
+  </div>
+
+  <!-- Encabezado superior -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🤖</span>
+      <h1 class="glow-text">Conversor Ultra Pro</h1>
+      <span class="version">v2.0</span>
+    </div>
+    <div class="top-actions">
+      <button id="templatesBtn" class="btn" title="Plantillas">📄</button>
+      <button id="settingsBtn" class="btn" title="Configuración">⚙️</button>
+      <button id="themeToggle" class="btn" aria-label="Cambiar tema" title="Cambiar tema">🌗</button>
+    </div>
+  </header>
+
+  <!-- Estructura principal -->
+  <main class="layout">
+    <!-- Panel izquierdo: Editor -->
+    <section class="panel editor-panel" aria-label="Editor">
+      <!-- Encabezado del panel: carga de archivo y acciones rápidas -->
+      <div class="panel-header">
+        <div class="file-section">
+        <label for="file" class="file-label">
+            <span class="file-icon">📁</span>
+            <span>Cargar archivo</span>
+            <!-- Acepta múltiples formatos: Markdown, HTML, texto plano, RTF -->
+            <input id="file" type="file" accept=".md,.markdown,.txt,.html,.htm,.rtf" multiple />
+          </label>
+        </div>
+        <div class="inline-actions">
+          <button id="pasteBtn" class="btn mini" title="Pegar desde portapapeles">📋</button>
+          <button id="formatBtn" class="btn mini" title="Auto-formatear">🎨</button>
+          <button id="clearBtn" class="btn mini danger" title="Limpiar">🧹</button>
+        </div>
+      </div>
+
+      <!-- Barra de herramientas -->
+      <div class="editor-toolbar">
+        <button class="toolbar-btn" data-action="bold" title="Negrita">**B**</button>
+        <button class="toolbar-btn" data-action="italic" title="Cursiva">*I*</button>
+        <button class="toolbar-btn" data-action="code" title="Código">`C`</button>
+        <button class="toolbar-btn" data-action="link" title="Enlace">🔗</button>
+        <button class="toolbar-btn" data-action="image" title="Imagen">🖼️</button>
+        <button class="toolbar-btn" data-action="table" title="Tabla">📊</button>
+        <button class="toolbar-btn" data-action="list" title="Lista">📝</button>
+        <div class="toolbar-divider"></div>
+        <button class="toolbar-btn" data-action="h1" title="Título H1">H1</button>
+        <button class="toolbar-btn" data-action="h2" title="Título H2">H2</button>
+        <button class="toolbar-btn" data-action="h3" title="Título H3">H3</button>
+      </div>
+
+      <!-- Editor de texto -->
+      <label for="input" class="label">Markdown, HTML o texto plano</label>
+      <div class="editor-container">
+        <textarea id="input" placeholder="Escribe o pega tu contenido aquí...&#10;&#10;Formatos soportados:&#10;• Markdown (.md)&#10;• HTML (.html)&#10;• Texto plano (.txt)&#10;• RTF (.rtf)&#10;&#10;Funciones especiales:&#10;• Auto-detección de formato&#10;• Limpieza inteligente&#10;• Vista previa en tiempo real&#10;• Auto-formateo inteligente"></textarea>
+        <div class="editor-enhancements">
+          <div class="line-numbers" id="lineNumbers"></div>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="stats-enhanced" aria-live="polite">
+        <div class="stat-item">
+          <span class="stat-label">Caracteres:</span>
+          <span id="charCount" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Palabras:</span>
+          <span id="wordCount" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Líneas:</span>
+          <span id="lineCount" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Formato:</span>
+          <span id="formatType" class="stat-value format-badge">Auto</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Tiempo lectura:</span>
+          <span id="readTime" class="stat-value">~0 min</span>
+        </div>
+      </div>
+
+      <!-- Acciones de exportación -->
+      <div class="actions-enhanced">
+        <div class="action-group primary-actions">
+          <button id="pdfBtn" class="btn primary large">
+            <span class="btn-icon">📄</span>
+            <span class="btn-text">PDF Premium</span>
+            <span class="btn-subtitle">A4, Headers, TOC</span>
+          </button>
+          <button id="docxBtn" class="btn large">
+            <span class="btn-icon">📝</span>
+            <span class="btn-text">DOCX</span>
+            <span class="btn-subtitle">MS Word</span>
+          </button>
+        </div>
+        <div class="action-group secondary-actions">
+          <button id="pngBtn" class="btn">📸 PNG</button>
+          <button id="htmlBtn" class="btn">🌐 HTML</button>
+          <button id="txtBtn" class="btn">📄 TXT</button>
+          <button id="mdBtn" class="btn">📝 MD</button>
+        </div>
+        <div class="action-group special-actions">
+          <button id="zipBtn" class="btn special">🗜️ ZIP All</button>
+          <button id="printBtn" class="btn">🖨️ Print</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel derecho: vista previa -->
+    <section class="panel preview-panel" aria-label="Previsualización">
+      <div class="preview-header">
+        <div class="preview-controls">
+          <button id="zoomOut" class="control-btn" title="Zoom -">🔍-</button>
+          <span class="zoom-level">100%</span>
+          <button id="zoomIn" class="control-btn" title="Zoom +">🔍+</button>
+          <div class="control-divider"></div>
+          <button id="fullscreenBtn" class="control-btn" title="Pantalla completa">⛶</button>
+          <button id="refreshPreview" class="control-btn" title="Actualizar">🔄</button>
+        </div>
+        <div class="preview-info">
+          <span class="page-info">Página <span id="currentPage">1</span> de <span id="totalPages">1</span></span>
+        </div>
+      </div>
+      <div class="preview-wrap" id="previewWrap">
+        <div id="preview" class="paper" aria-label="Vista previa del documento">
+          <div class="welcome-message">
+            <div class="welcome-icon">📄</div>
+            <h2>Conversor Ultra Pro</h2>
+            <p>Comienza escribiendo o pegando tu contenido en el editor de la izquierda.</p>
+            <div class="welcome-features">
+              <div class="feature-item">📄 PDF Premium con TOC</div>
+              <div class="feature-item">🎨 Auto-formateo inteligente</div>
+              <div class="feature-item">📊 Estadísticas avanzadas</div>
+              <div class="feature-item">📄 Plantillas profesionales</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal de configuración -->
+  <div id="settingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>⚙️ Configuración</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-group">
+          <label class="setting-label">Calidad PDF:</label>
+          <select id="pdfQuality" class="setting-input">
+            <option value="0.7">Estándar (menor tamaño)</option>
+            <option value="0.9" selected>Alta (recomendado)</option>
+            <option value="1.0">Máxima (mayor tamaño)</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Escala de exportación:</label>
+          <select id="exportScale" class="setting-input">
+            <option value="1">1x (rápido)</option>
+            <option value="2" selected>2x (recomendado)</option>
+            <option value="3">3x (alta resolución)</option>
+          </select>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Auto-guardado:</label>
+          <input type="checkbox" id="autoSave" class="setting-checkbox" checked />
+          <span class="setting-description">Guarda automáticamente el contenido</span>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Numeración de líneas:</label>
+          <input type="checkbox" id="showLineNumbers" class="setting-checkbox" />
+          <span class="setting-description">Mostrar números de línea en el editor</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de plantillas -->
+  <div id="templatesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📄 Plantillas</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="template-grid">
+          <div class="template-card" data-template="academicPro">
+            <div class="template-icon">🎓</div>
+            <h4>Paper Académico Pro</h4>
+            <p>Estructura completa con resumen, metodología y referencias</p>
+          </div>
+          <div class="template-card" data-template="executive">
+            <div class="template-icon">💼</div>
+            <h4>Reporte Ejecutivo</h4>
+            <p>Informe corporativo con indicadores y proyecciones</p>
+          </div>
+          <div class="template-card" data-template="resumePro">
+            <div class="template-icon">📋</div>
+            <h4>Currículum Pro</h4>
+            <p>CV moderno con secciones profesionales</p>
+          </div>
+          <div class="template-card" data-template="technicalPro">
+            <div class="template-icon">🔧</div>
+            <h4>Doc Técnica Pro</h4>
+            <p>Manual con código, requisitos e instalación</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información adicional sobre convertidores y capacidades -->
+  <section class="panel info-panel" aria-label="Información adicional">
+    <h2 style="margin-bottom:0.6em; font-size:1.5em; color:var(--accent-primary);">Información adicional</h2>
+    <h3 style="margin-top:0; font-size:1.25em;">Características esenciales del conversor</h3>
+    <ul style="margin-left:1.5em; margin-bottom:1em;">
+      <li>Soporte CSS completo: <strong>flexbox</strong>, <strong>grid</strong>, gradientes y media queries</li>
+      <li>Renderizado de tipografías con Google Fonts y fuentes del sistema</li>
+      <li>Control de páginas: <code>page-break-before</code>, <code>page-break-inside</code>, márgenes personalizados y formato A4</li>
+      <li>Exportaciones premium: PDF A4 de alta calidad, DOCX estructurado y PNG 4K</li>
+    </ul>
+    <h3 style="margin-top:0; font-size:1.25em;">Convertidores recomendados</h3>
+    <ul style="margin-left:1.5em; margin-bottom:1em;">
+      <li>🏆 <strong>WeasyPrint</strong> – Soporte CSS completo y gratuito (weasyprint.org)</li>
+      <li>🥈 <strong>Basados en Puppeteer</strong> – html-css-to-pdf.com, PDF24 Tools, HTMLtoPDF.io</li>
+      <li>🥉 <strong>Prince XML</strong> – Profesional, con costo pero calidad máxima</li>
+    </ul>
+    <h3 style="margin-top:0; font-size:1.25em;">Si el conversor falla, probablemente le falte:</h3>
+    <ul style="margin-left:1.5em;">
+      <li>Soporte para CSS Grid</li>
+      <li>Renderizado de gradientes</li>
+      <li>Control de <code>page-breaks</code> avanzado</li>
+      <li>Fuentes embebidas</li>
+    </ul>
+  </section>
+
+  <!-- Pie de página -->
+  <footer class="footer-enhanced">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>Conversor Ultra Pro</h4>
+        <p>Conversor profesional de documentos</p>
+      </div>
+      <div class="footer-section">
+        <h4>Formatos soportados</h4>
+        <p>PDF • DOCX • PNG • HTML • TXT • MD</p>
+      </div>
+      <div class="footer-section">
+        <h4>Características premium</h4>
+        <p>Vista previa en vivo • Plantillas • Auto-guardado</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <small>Los archivos PDF mantienen fondo blanco y texto negro para máxima legibilidad. Los colores inline en HTML se respetan.</small>
+    </div>
+  </footer>
+
+  <!-- Scripts de la aplicación -->
+  <script>
+    // Configuración global y valores por defecto
+    const CONFIG = {
+      autoSave: true,
+      pdfQuality: 0.95,
+      /* Escala predeterminada para exportaciones (3x → 4K). Ajustable en configuración */
+      exportScale: 3,
+      /* Tamaño máximo de archivo: 50MB para soportar proyectos grandes */
+      maxFileSize: 50 * 1024 * 1024,
+      autoSaveInterval: 30000 // 30 segundos
+    };
+
+    // Plantillas de contenido
+    const TEMPLATES = {
+      academic: `# Título del Documento\n\n**Autor:** Tu Nombre  \n**Fecha:** ${new Date().toLocaleDateString()}  \n**Institución:** Universidad/Institución\n\n## Resumen\n[Contenido del resumen...]\n\n## Introducción\n[Introducción al tema...]\n\n## Desarrollo\n### Subtema 1\n[Contenido...]\n\n### Subtema 2\n[Más contenido...]\n\n## Conclusiones\n[Conclusiones finales...]\n\n## Referencias\n1. Referencia 1\n2. Referencia 2` ,
+      business: `# Reporte Corporativo\n\n**Empresa:** Nombre de la Empresa  \n**Período:** Q4 2024  \n**Preparado por:** Equipo Ejecutivo\n\n## Resumen Ejecutivo\n### Puntos Clave\n- Punto clave 1\n- Punto clave 2\n- Punto clave 3\n\n## Análisis Financiero\n\n| Métrica | Q3 2024 | Q4 2024 | Variación |\n|---------|---------|---------|-----------|\n| Ingresos | $100K | $120K | +20% |\n| Gastos | $80K | $85K | +6.25% |\n| Utilidad | $20K | $35K | +75% |\n\n## Recomendaciones\n\n1. Recomendación estratégica 1\n2. Recomendación estratégica 2\n\n## Próximos Pasos\n\n- Acción 1\n- Acción 2\n- Acción 3` ,
+      resume: `# Tu Nombre\n\n**Email:** tu@email.com | **Teléfono:** +56 9 1234 5678  \n**LinkedIn:** linkedin.com/in/tuperfil | **GitHub:** github.com/tuperfil\n\n## Perfil Profesional\n\nBreve descripción de tu experiencia y objetivos profesionales...\n\n## Experiencia Laboral\n\n### Cargo Actual - Empresa (2022 - Presente)\n- Logro importante 1\n- Logro importante 2\n- Logro importante 3\n\n### Cargo Anterior - Empresa (2020 - 2022)\n- Responsabilidad clave 1\n- Responsabilidad clave 2\n\n## Educación\n\n**Título Profesional** - Universidad (Año)  \nEspecialización o mención relevante\n\n## Habilidades Técnicas\n\n- Habilidad 1\n- Habilidad 2  \n- Habilidad 3\n\n## Certificaciones\n\n- Certificación 1 (Año)\n- Certificación 2 (Año)` ,
+      technical: `# Manual Técnico\n\n**Versión:** 1.0  \n**Última actualización:** ${new Date().toLocaleDateString()}  \n**Autor:** Equipo Técnico\n\n## Tabla de Contenidos\n\n1. [Introducción](#introducción)\n2. [Requisitos del Sistema](#requisitos)\n3. [Instalación](#instalación)\n4. [Configuración](#configuración)\n5. [Uso](#uso)\n6. [Solución de Problemas](#problemas)\n\n## Introducción\n\nDescripción general del sistema/herramienta...\n\n## Requisitos del Sistema\n\n### Hardware Mínimo\n- Procesador: Intel i3 o equivalente\n- RAM: 4GB\n- Almacenamiento: 1GB disponible\n\n### Software Requerido\n- Sistema operativo: Windows 10+, macOS 10.14+, Ubuntu 18.04+\n- Navegador: Chrome 90+, Firefox 88+\n\n## Instalación\n\n### Paso 1: Descarga\n\n```bash\ngit clone https://github.com/usuario/proyecto.git\ncd proyecto\n```\n\n### Paso 2: Configuración\n\n```bash\nnpm install\nnpm run setup\n```\n\n## Uso Básico\n\nPara ejecutar la aplicación:\n```bash\nnpm start\n```\n\n## Solución de Problemas\n\n### Error común 1\n**Síntoma:** Descripción del error  \n**Solución:** Pasos para resolverlo\n\n### Error común 2\n**Síntoma:** Otro error típico  \n**Solución:** Cómo solucionarlo` }
+    };
+
+    // Plantillas avanzadas (versión Ultra Pro)
+    // Estas asignaciones amplían el conjunto de plantillas básicas con ejemplos profesionales.
+    TEMPLATES.academicPro = `---
+title: "Research Title"
+author: "Author Name"
+date: "${new Date().getFullYear()}"
+institution: "University Name"
+abstract: "Research abstract here..."
+keywords: ["keyword1", "keyword2", "keyword3"]
+---
+
+# Research Title
+
+**Abstract**
+[100-word compelling abstract]
+
+**Keywords:** AI, Machine Learning, Deep Learning
+
+## 1. Introduction
+[Compelling introduction with problem statement]
+
+## 2. Literature Review
+[Comprehensive review with citations]
+
+## 3. Methodology
+### 3.1 Data Collection
+### 3.2 Analysis Framework
+
+## 4. Results and Discussion
+### 4.1 Findings
+### 4.2 Statistical Analysis
+
+## 5. Conclusions and Future Work
+
+## References
+1. Smith, J. (2024). "AI Revolution". *Nature AI*, 15(3), 245-267.
+2. Brown, A. et al. (2023). "Deep Learning Applications". *Science*, 380(6642), 123-145.`;
+
+    TEMPLATES.executive = `# Q4 2024 Executive Summary
+
+**Company:** TechCorp International  
+**Period:** October - December 2024  
+**Prepared by:** Executive Team  
+**Date:** December 31, 2024
+
+---
+
+## 🎯 Executive Summary
+
+### Key Performance Indicators
+- **Revenue Growth:** +35% YoY ($2.4M → $3.2M)
+- **Customer Acquisition:** +150 new enterprise clients
+- **Market Expansion:** 3 new geographical markets
+- **Team Growth:** +40% headcount (120 → 168 employees)
+
+### Strategic Achievements
+✅ Successfully launched AI-powered product suite  
+✅ Secured $15M Series B funding round  
+✅ Established partnerships with Fortune 500 companies  
+✅ Achieved ISO 27001 certification  
+
+## 📊 Financial Performance
+
+| Metric | Q3 2024 | Q4 2024 | Growth |
+|--------|---------|---------|--------|
+| Total Revenue | $800K | $1.1M | +37.5% |
+| ARR | $2.4M | $3.2M | +33.3% |
+| Gross Margin | 75% | 78% | +3pp |
+| Customer LTV | $45K | $52K | +15.6% |
+
+## 🎯 Market Analysis
+
+### Competitive Landscape
+Our AI-driven approach has positioned us as the **#2 player** in the enterprise automation space, with 23% market share growth.
+
+### Customer Satisfaction
+- **NPS Score:** 72 (Industry avg: 31)
+- **Customer Retention:** 94%
+- **Support Response Time:** <2 hours
+
+## 🚀 Strategic Initiatives 2025
+
+### Product Development
+1. **AI Enhancement Suite** (Q1 2025)
+2. **Mobile Platform Launch** (Q2 2025)
+3. **Enterprise Integration Hub** (Q3 2025)
+
+### Market Expansion
+- **Target Markets:** Europe, Asia-Pacific
+- **Investment Required:** $5M
+- **Expected ROI:** 300% by Q4 2025
+
+## 💡 Recommendations
+
+1. **Accelerate R&D Investment** - Increase by 25% to maintain competitive edge
+2. **Scale Customer Success Team** - Target 1:50 CS to customer ratio
+3. **Strategic Acquisitions** - Evaluate 3 potential targets in Q1
+
+## 📈 Financial Projections
+
+### Revenue Forecast 2025
+- **Q1:** $1.3M (Conservative) | $1.5M (Aggressive)
+- **Q2:** $1.6M (Conservative) | $1.9M (Aggressive)
+- **Q3:** $1.9M (Conservative) | $2.3M (Aggressive)
+- **Q4:** $2.2M (Conservative) | $2.8M (Aggressive)
+
+**Annual Target:** $7.0M - $8.5M (+119% - +166% growth)
+
+---
+
+*This report contains confidential business information. Distribution limited to executive team and board members.*`;
+
+    TEMPLATES.resumePro = `# Tu Nombre
+
+**Email:** tu@email.com | **Teléfono:** +56 9 1234 5678  
+**LinkedIn:** linkedin.com/in/tuperfil | **GitHub:** github.com/tuperfil
+
+## Perfil Profesional
+
+Breve descripción de tu experiencia y objetivos profesionales...
+
+## Experiencia Laboral
+
+### Cargo Actual - Empresa (2022 - Presente)
+- Logro importante 1
+- Logro importante 2
+- Logro importante 3
+
+### Cargo Anterior - Empresa (2020 - 2022)
+- Responsabilidad clave 1
+- Responsabilidad clave 2
+
+## Educación
+
+**Título Profesional** - Universidad (Año)  
+Especialización o mención relevante
+
+## Habilidades Técnicas
+
+- Habilidad 1
+- Habilidad 2  
+- Habilidad 3
+
+## Certificaciones
+
+- Certificación 1 (Año)
+- Certificación 2 (Año)`;
+
+    TEMPLATES.technicalPro = `# Manual Técnico Avanzado
+
+**Versión:** 1.0  
+**Última actualización:** ${new Date().toLocaleDateString()}  
+**Autor:** Equipo Técnico
+
+## Tabla de Contenidos
+
+1. [Introducción](#introducción)
+2. [Requisitos del Sistema](#requisitos)
+3. [Instalación](#instalación)
+4. [Configuración](#configuración)
+5. [Uso](#uso)
+6. [Solución de Problemas](#problemas)
+
+## Introducción
+
+Descripción general del sistema/herramienta...
+
+## Requisitos del Sistema
+
+### Hardware Mínimo
+- Procesador: Intel i3 o equivalente
+- RAM: 4GB
+- Almacenamiento: 1GB disponible
+
+### Software Requerido
+- Sistema operativo: Windows 10+, macOS 10.14+, Ubuntu 18.04+
+- Navegador: Chrome 90+, Firefox 88+
+
+## Instalación
+
+### Paso 1: Descarga
+
+    git clone https://github.com/usuario/proyecto.git
+    cd proyecto
+
+### Paso 2: Configuración
+
+    npm install
+    npm run setup
+
+## Uso Básico
+
+Para ejecutar la aplicación:
+
+    npm start
+
+## Solución de Problemas
+
+### Error común 1
+**Síntoma:** Descripción del error  
+**Solución:** Pasos para resolverlo
+
+### Error común 2
+**Síntoma:** Otro error típico  
+**Solución:** Cómo solucionarlo`;
+
+    // Utilidades de limpieza
+    function stripFrontMatter(text) {
+      const fm = text.match(/^\s*---[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]?/);
+      if (fm) {
+        return text.slice(fm[0].length);
+      }
+      return text;
+    }
+    function sanitizeHTML(dirtyHtml) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(dirtyHtml, "text/html");
+      ["script", "iframe", "object", "embed"].forEach(tag => {
+        doc.querySelectorAll(tag).forEach(n => n.remove());
+      });
+      const tree = doc.body || doc;
+      const walker = document.createTreeWalker(tree, NodeFilter.SHOW_ELEMENT);
+      while (walker.nextNode()) {
+        const el = walker.currentNode;
+        Array.from(el.attributes).forEach(attr => {
+          const name = attr.name.toLowerCase();
+          const val = (attr.value || "").trim();
+          if (name.startsWith("on") || ((name === "href" || name === "src") && /^javascript:/i.test(val))) {
+            el.removeAttribute(attr.name);
+          }
+        });
+      }
+      return (doc.body && doc.body.innerHTML) || "";
+    }
+    function stripPUA(text) {
+      return text.replace(/[\uE000-\uF8FF]/g, "");
+    }
+    function stripCitationTokens(text) {
+      return text.replace(/filecite|turn\d+file\d+/gi, "");
+    }
+    function looksLikeHTML(text) {
+      const t = text.trim();
+      if (t.startsWith("<") && t.endsWith(">")) return true;
+      return /<\/?[a-z][\s\S]*>/i.test(t);
+    }
+    function detectFormat(text) {
+      const cleaned = text.trim();
+      if (looksLikeHTML(cleaned)) return 'HTML';
+      // detección básica de RTF: archivos que comienzan con {\rtf1 o contienen comandos RTF
+      if (/^\{\\rtf1/.test(cleaned) || /\\[a-z]+\d*\s*/.test(cleaned)) return 'RTF';
+      // detección básica de Markdown: encabezados, negritas, listas o enlaces
+      if (/^#{1,6}\s/m.test(cleaned) || /\*\*.*\*\*/.test(cleaned) || /\[.*\]\(.*\)/.test(cleaned) || /^\s*[-*+]\s/m.test(cleaned)) return 'Markdown';
+      return 'Texto';
+    }
+    function calculateReadingTime(text) {
+      const wordsPerMinute = 200;
+      const words = text.trim().split(/\s+/).filter(Boolean).length;
+      const minutes = Math.ceil(words / wordsPerMinute);
+      return minutes;
+    }
+    function htmlToPlainText(html) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      return doc.body.textContent || "";
+    }
+
+    // Elementos del DOM
+    const inputEl = document.getElementById("input");
+    const previewEl = document.getElementById("preview");
+    const charCountEl = document.getElementById("charCount");
+    const wordCountEl = document.getElementById("wordCount");
+    const lineCountEl = document.getElementById("lineCount");
+    const formatTypeEl = document.getElementById("formatType");
+    const readTimeEl = document.getElementById("readTime");
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    const lineNumbersEl = document.getElementById("lineNumbers");
+
+    // Actualiza estadísticas y otros datos
+    function updateStats(text) {
+      const chars = text.length;
+      const words = text.trim().split(/\s+/).filter(Boolean);
+      const lines = text.split('\n').length;
+      const format = detectFormat(text);
+      const readTime = calculateReadingTime(text);
+      charCountEl.textContent = chars.toLocaleString();
+      wordCountEl.textContent = words.length.toLocaleString();
+      lineCountEl.textContent = lines.toLocaleString();
+      formatTypeEl.textContent = format;
+      formatTypeEl.className = `stat-value format-badge format-${format.toLowerCase()}`;
+      readTimeEl.textContent = `~${readTime} min`;
+      // Actualiza números de línea
+      if (document.getElementById('showLineNumbers').checked) {
+        lineNumbersEl.innerHTML = Array.from({length: lines}, (_, i) => i + 1).join('<br>');
+      } else {
+        lineNumbersEl.innerHTML = '';
+      }
+    }
+
+    // Renderiza el contenido en la vista previa
+    function render() {
+      const raw = inputEl.value || "";
+      updateStats(raw);
+      if (!raw.trim()) {
+        previewEl.innerHTML = `\n          <div class="welcome-message">\n            <div class="welcome-icon">📄</div>\n            <h2>Conversor Pro</h2>\n            <p>Comienza escribiendo o pegando tu contenido en el editor de la izquierda.</p>\n            <div class="welcome-features">\n              <div class="feature-item">📄 PDF Premium con TOC</div>\n              <div class="feature-item">🎨 Auto-formateo inteligente</div>\n              <div class="feature-item">📊 Estadísticas avanzadas</div>\n              <div class="feature-item">📄 Plantillas profesionales</div>\n            </div>\n          </div>\n        `;
+        return;
+      }
+      const withoutFM = stripFrontMatter(raw);
+      let cleanedInput = stripPUA(withoutFM);
+      cleanedInput = stripCitationTokens(cleanedInput);
+      let html = "";
+      if (looksLikeHTML(cleanedInput)) {
+        html = sanitizeHTML(cleanedInput);
+      } else if (typeof marked !== "undefined" && typeof marked.parse === "function") {
+        try {
+          marked.setOptions({ breaks: true, gfm: true, headerIds: true, mangle: false });
+          const mdHtml = marked.parse(cleanedInput);
+          html = sanitizeHTML(mdHtml);
+        } catch (e) {
+          html = sanitizeHTML(cleanedInput.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
+        }
+      } else {
+        html = sanitizeHTML(cleanedInput.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>"));
+      }
+      previewEl.innerHTML = html;
+      generateTOC();
+    }
+
+    // Genera una tabla de contenidos si hay múltiples encabezados
+    function generateTOC() {
+      const headers = previewEl.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      // Elimina tabla de contenidos previa
+      const existingTOC = previewEl.querySelector('.table-of-contents');
+      if (existingTOC) existingTOC.remove();
+      if (headers.length > 2) {
+        const toc = document.createElement('div');
+        toc.className = 'table-of-contents';
+        toc.innerHTML = '<h2>Tabla de Contenidos</h2><ul></ul>';
+        const ul = toc.querySelector('ul');
+        headers.forEach((header, index) => {
+          const level = parseInt(header.tagName.charAt(1));
+          const id = `header-${index}`;
+          header.id = id;
+          const li = document.createElement('li');
+          li.className = `toc-level-${level}`;
+          li.innerHTML = `<a href="#${id}">${header.textContent}</a>`;
+          ul.appendChild(li);
+        });
+        previewEl.insertBefore(toc, previewEl.firstChild);
+      }
+    }
+
+    // Maneja la auto-guardado
+    let autoSaveTimeout;
+    function scheduleAutoSave() {
+      if (!CONFIG.autoSave) return;
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+      autoSaveTimeout = setTimeout(() => {
+        localStorage.setItem('converter-content', inputEl.value);
+        localStorage.setItem('converter-timestamp', Date.now());
+      }, CONFIG.autoSaveInterval);
+    }
+
+    // Debounce para renderizado
+    let renderTimeout;
+    function scheduleRender() {
+      if (renderTimeout) clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(render, 150);
+    }
+
+    // Listeners del editor
+    inputEl.addEventListener("input", () => {
+      scheduleRender();
+      scheduleAutoSave();
+    });
+
+    // Carga de archivos
+    document.getElementById("file").addEventListener("change", async (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+      showLoading("Cargando archivo(s)...");
+      try {
+        let combinedContent = "";
+        for (const file of files) {
+          if (file.size > CONFIG.maxFileSize) {
+            alert(`El archivo ${file.name} es demasiado grande (máximo 10MB)`);
+            continue;
+          }
+          const text = await file.text();
+          if (files.length > 1) {
+            combinedContent += `\n\n# ${file.name}\n\n${text}`;
+          } else {
+            combinedContent = text;
+          }
+        }
+        inputEl.value = combinedContent;
+        render();
+      } catch (error) {
+        alert("Error al cargar el archivo: " + error.message);
+      } finally {
+        hideLoading();
+      }
+    });
+
+    // Botones de la toolbar
+    document.querySelectorAll('.toolbar-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        insertTextAction(action);
+      });
+    });
+    function insertTextAction(action) {
+      const start = inputEl.selectionStart;
+      const end = inputEl.selectionEnd;
+      const selectedText = inputEl.value.substring(start, end);
+      let replacement = "";
+      switch(action) {
+        case 'bold':
+          replacement = `**${selectedText || 'texto en negrita'}**`;
+          break;
+        case 'italic':
+          replacement = `*${selectedText || 'texto en cursiva'}*`;
+          break;
+        case 'code':
+          replacement = `\`${selectedText || 'código'}\``;
+          break;
+        case 'link':
+          replacement = `[${selectedText || 'texto del enlace'}](https://ejemplo.com)`;
+          break;
+        case 'image':
+          replacement = `![${selectedText || 'descripción'}](url-de-la-imagen.jpg)`;
+          break;
+        case 'table':
+          replacement = `\n| Columna 1 | Columna 2 | Columna 3 |\n|-----------|-----------|-----------|\n| Dato 1    | Dato 2    | Dato 3    |\n| Dato 4    | Dato 5    | Dato 6    |\n`;
+          break;
+        case 'list':
+          replacement = `\n- Elemento 1\n- Elemento 2\n- Elemento 3\n`;
+          break;
+        case 'h1':
+          replacement = `# ${selectedText || 'Título Principal'}`;
+          break;
+        case 'h2':
+          replacement = `## ${selectedText || 'Subtítulo'}`;
+          break;
+        case 'h3':
+          replacement = `### ${selectedText || 'Subtítulo Menor'}`;
+          break;
+      }
+      inputEl.value = inputEl.value.substring(0, start) + replacement + inputEl.value.substring(end);
+      inputEl.focus();
+      const newPos = start + replacement.length;
+      inputEl.setSelectionRange(newPos, newPos);
+      scheduleRender();
+    }
+
+    // Botones utilitarios
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (inputEl.value && !confirm("¿Estás seguro de que quieres limpiar todo el contenido?")) return;
+      inputEl.value = "";
+      render();
+    });
+    document.getElementById("pasteBtn").addEventListener("click", async () => {
+      try {
+        const txt = await navigator.clipboard.readText();
+        if (txt) {
+          inputEl.value = txt;
+          render();
+        }
+      } catch (err) {
+        alert("No se pudo pegar desde el portapapeles. Permite el acceso o pega manualmente (Ctrl/Cmd+V).");
+      }
+    });
+    document.getElementById("formatBtn").addEventListener("click", () => {
+      const content = inputEl.value;
+      if (!content.trim()) return;
+      let formatted = content
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/[ \t]+$/gm, '')
+        .replace(/^[ \t]+/gm, '')
+        .trim();
+      inputEl.value = formatted;
+      render();
+    });
+
+    // Funciones para mostrar y ocultar loading
+    function showLoading(message = "Procesando...") {
+      loadingOverlay.style.display = 'flex';
+      loadingOverlay.querySelector('p').textContent = message;
+    }
+    function hideLoading() {
+      loadingOverlay.style.display = 'none';
+    }
+
+    // Conversión de imágenes remotas a Data URI
+    async function embedRemoteImages() {
+      const imgs = previewEl.querySelectorAll('img');
+      const tasks = Array.from(imgs).map(img => {
+        const src = img.getAttribute('src');
+        if (!src || src.startsWith('data:')) return Promise.resolve();
+        try {
+          const url = new URL(src, window.location.href);
+          if (url.origin === window.location.origin) return Promise.resolve();
+        } catch (e) {
+          return Promise.resolve();
+        }
+        return fetch(src)
+          .then(res => res.blob())
+          .then(blob => new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              img.src = reader.result;
+              resolve();
+            };
+            reader.onerror = () => resolve();
+            reader.readAsDataURL(blob);
+          }))
+          .catch(() => {});
+      });
+      return Promise.all(tasks);
+    }
+
+    // Añade header y footer al PDF
+    function addPdfHeaderFooter(jsPdf, titleText = "Conversor Ultra Pro") {
+      const totalPages = jsPdf.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        jsPdf.setPage(i);
+        jsPdf.setFontSize(9);
+        jsPdf.setTextColor(80);
+        jsPdf.text(titleText, 14, 10);
+        jsPdf.text(`Página ${i} / ${totalPages}`, jsPdf.internal.pageSize.getWidth() - 14, jsPdf.internal.pageSize.getHeight() - 10, { align: "right" });
+        jsPdf.setDrawColor(200);
+        jsPdf.setLineWidth(0.5);
+        jsPdf.line(14, 12, jsPdf.internal.pageSize.getWidth() - 14, 12);
+      }
+    }
+
+    // Exportadores
+    async function exportPDF() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      showLoading("Generando PDF premium...");
+      try {
+        await embedRemoteImages();
+        if (typeof html2pdf === "undefined") {
+          throw new Error("La librería html2pdf.js no está disponible");
+        }
+        document.body.classList.add("exporting");
+        previewEl.classList.add("print");
+        const opt = {
+          margin: [15, 12, 18, 12],
+          filename: `documento-${new Date().toISOString().split('T')[0]}.pdf`,
+          image: { type: "jpeg", quality: CONFIG.pdfQuality },
+          html2canvas: {
+            scale: CONFIG.exportScale,
+            backgroundColor: "#ffffff",
+            useCORS: true,
+            allowTaint: true,
+            logging: false
+          },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"], before: ".page-break" }
+        };
+        const worker = html2pdf().set(opt).from(previewEl);
+        const pdf = await worker.toPdf().get("pdf");
+        addPdfHeaderFooter(pdf, "Conversor Ultra Pro");
+        pdf.save(opt.filename);
+      } catch (err) {
+        alert("Error al exportar PDF: " + err.message);
+        console.error(err);
+      } finally {
+        previewEl.classList.remove("print");
+        document.body.classList.remove("exporting");
+        hideLoading();
+      }
+    }
+    async function exportPNG() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      showLoading("Generando imagen PNG...");
+      try {
+        if (typeof html2canvas === "undefined") {
+          throw new Error("La librería html2canvas no está disponible");
+        }
+        document.body.classList.add("exporting");
+        previewEl.classList.add("print");
+        await embedRemoteImages();
+        const canvas = await html2canvas(previewEl, {
+          backgroundColor: "#ffffff",
+          scale: CONFIG.exportScale,
+          useCORS: true,
+          allowTaint: true,
+          logging: false
+        });
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const filename = `captura-${new Date().toISOString().split('T')[0]}.png`;
+            saveAs(blob, filename);
+          }
+        });
+      } catch (err) {
+        alert("Error al exportar PNG: " + err.message);
+        console.error(err);
+      } finally {
+        previewEl.classList.remove("print");
+        document.body.classList.remove("exporting");
+        hideLoading();
+      }
+    }
+    async function exportDOCX() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      showLoading("Generando documento DOCX...");
+      try {
+        const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
+        const raw = stripFrontMatter(inputEl.value || "");
+        const plain = looksLikeHTML(raw) ? htmlToPlainText(raw) : raw;
+        const lines = plain.replace(/\r\n/g, "\n").split("\n");
+        const paragraphs = lines.map(line => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('# ')) {
+            return new Paragraph({ text: trimmed.substring(2), heading: HeadingLevel.HEADING_1 });
+          } else if (trimmed.startsWith('## ')) {
+            return new Paragraph({ text: trimmed.substring(3), heading: HeadingLevel.HEADING_2 });
+          } else if (trimmed.startsWith('### ')) {
+            return new Paragraph({ text: trimmed.substring(4), heading: HeadingLevel.HEADING_3 });
+          } else {
+            return new Paragraph({ text: trimmed || " " });
+          }
+        });
+        const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
+        const blob = await Packer.toBlob(doc);
+        const filename = `documento-${new Date().toISOString().split('T')[0]}.docx`;
+        saveAs(blob, filename);
+      } catch (err) {
+        alert("Error al exportar DOCX: " + err.message);
+        console.error(err);
+      } finally {
+        hideLoading();
+      }
+    }
+    function exportTXT() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      const raw = stripFrontMatter(inputEl.value || "");
+      const text = looksLikeHTML(raw) ? htmlToPlainText(raw) : raw;
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const filename = `documento-${new Date().toISOString().split('T')[0]}.txt`;
+      saveAs(blob, filename);
+    }
+    function exportMD() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      const cleaned = stripFrontMatter(inputEl.value || "");
+      const blob = new Blob([cleaned], { type: "text/markdown;charset=utf-8" });
+      const filename = `documento-${new Date().toISOString().split('T')[0]}.md`;
+      saveAs(blob, filename);
+    }
+    function exportHTML() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      const htmlContent = `<!DOCTYPE html>\n<html lang="es">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n<title>Documento Exportado</title>\n<style>\nbody { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }\nh1, h2, h3 { color: #333; }\ncode { background: #f5f5f5; padding: 2px 4px; border-radius: 3px; }\npre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }\ntable { border-collapse: collapse; width: 100%; }\nth, td { border: 1px solid #ddd; padding: 8px; text-align: left; }\nth { background: #f5f5f5; }\n</style>\n</head>\n<body>\n${previewEl.innerHTML}\n</body>\n</html>`;
+      const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+      const filename = `documento-${new Date().toISOString().split('T')[0]}.html`;
+      saveAs(blob, filename);
+    }
+    async function exportZip() {
+      if (!inputEl.value.trim()) {
+        alert("No hay contenido para exportar");
+        return;
+      }
+      showLoading("Creando archivo ZIP...");
+      try {
+        alert("Función ZIP en desarrollo. Por favor exporta cada formato individualmente.");
+      } catch (err) {
+        alert("Error al crear ZIP: " + err.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Listeners para exportación
+    document.getElementById("pdfBtn").addEventListener("click", exportPDF);
+    document.getElementById("pngBtn").addEventListener("click", exportPNG);
+    document.getElementById("docxBtn").addEventListener("click", exportDOCX);
+    document.getElementById("txtBtn").addEventListener("click", exportTXT);
+    document.getElementById("mdBtn").addEventListener("click", exportMD);
+    document.getElementById("htmlBtn").addEventListener("click", exportHTML);
+    document.getElementById("zipBtn").addEventListener("click", exportZip);
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+    // Modales de configuración y plantillas
+    function openModal(modalId) {
+      document.getElementById(modalId).style.display = 'flex';
+    }
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+    document.getElementById("settingsBtn").addEventListener("click", () => openModal("settingsModal"));
+    document.getElementById("templatesBtn").addEventListener("click", () => openModal("templatesModal"));
+    document.querySelectorAll('.modal-close').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const modal = e.target.closest('.modal');
+        if (modal) closeModal(modal.id);
+      });
+    });
+    document.querySelectorAll('.modal').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal(modal.id);
+      });
+    });
+    // Plantillas
+    document.querySelectorAll('.template-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const templateType = card.dataset.template;
+        if (TEMPLATES[templateType]) {
+          if (inputEl.value && !confirm("¿Reemplazar el contenido actual con la plantilla?")) return;
+          inputEl.value = TEMPLATES[templateType];
+          render();
+          closeModal("templatesModal");
+        }
+      });
+    });
+
+    // Configuraciones
+    document.getElementById("pdfQuality").addEventListener("change", (e) => {
+      CONFIG.pdfQuality = parseFloat(e.target.value);
+      localStorage.setItem('converter-config', JSON.stringify(CONFIG));
+    });
+    document.getElementById("exportScale").addEventListener("change", (e) => {
+      CONFIG.exportScale = parseInt(e.target.value);
+      localStorage.setItem('converter-config', JSON.stringify(CONFIG));
+    });
+    document.getElementById("autoSave").addEventListener("change", (e) => {
+      CONFIG.autoSave = e.target.checked;
+      localStorage.setItem('converter-config', JSON.stringify(CONFIG));
+    });
+    document.getElementById("showLineNumbers").addEventListener("change", () => {
+      scheduleRender();
+      localStorage.setItem('converter-config', JSON.stringify(CONFIG));
+    });
+
+    // Tema claro/oscuro
+    const themeToggleBtn = document.getElementById("themeToggle");
+    const THEME_KEY = "converter-theme";
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      themeToggleBtn.textContent = theme === 'dark' ? '🌞' : '🌙';
+    }
+    function initTheme() {
+      const stored = localStorage.getItem(THEME_KEY);
+      applyTheme(stored || "dark");
+    }
+    themeToggleBtn.addEventListener("click", () => {
+      const current = document.documentElement.dataset.theme || "dark";
+      const next = current === "dark" ? "light" : "dark";
+      applyTheme(next);
+      localStorage.setItem(THEME_KEY, next);
+    });
+
+    // Zoom y pantalla completa
+    let zoomLevel = 1;
+    document.getElementById("zoomIn").addEventListener("click", () => {
+      zoomLevel = Math.min(zoomLevel + 0.1, 2);
+      previewEl.style.transform = `scale(${zoomLevel})`;
+      document.querySelector('.zoom-level').textContent = Math.round(zoomLevel * 100) + '%';
+    });
+    document.getElementById("zoomOut").addEventListener("click", () => {
+      zoomLevel = Math.max(zoomLevel - 0.1, 0.5);
+      previewEl.style.transform = `scale(${zoomLevel})`;
+      document.querySelector('.zoom-level').textContent = Math.round(zoomLevel * 100) + '%';
+    });
+    document.getElementById("refreshPreview").addEventListener("click", render);
+    document.getElementById("fullscreenBtn").addEventListener("click", () => {
+      const previewWrap = document.getElementById("previewWrap");
+      if (!document.fullscreenElement) {
+        previewWrap.requestFullscreen().catch(err => {
+          console.log("Error activando pantalla completa:", err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    // Recuperar contenido guardado
+    function loadSavedContent() {
+      const saved = localStorage.getItem('converter-content');
+      const timestamp = localStorage.getItem('converter-timestamp');
+      if (saved && timestamp) {
+        const age = Date.now() - parseInt(timestamp);
+        const hours = Math.floor(age / (1000 * 60 * 60));
+        if (hours < 24 && confirm(`Se encontró contenido guardado hace ${hours} hora(s). ¿Quieres recuperarlo?`)) {
+          inputEl.value = saved;
+        }
+      }
+    }
+    // Cargar configuración guardada
+    function loadConfig() {
+      const saved = localStorage.getItem('converter-config');
+      if (saved) {
+        try {
+          const config = JSON.parse(saved);
+          Object.assign(CONFIG, config);
+          document.getElementById("pdfQuality").value = CONFIG.pdfQuality;
+          document.getElementById("exportScale").value = CONFIG.exportScale;
+          document.getElementById("autoSave").checked = CONFIG.autoSave;
+        } catch (e) {
+          console.log("Error cargando configuración:", e);
+        }
+      }
+    }
+
+    // Inicialización
+    function init() {
+      initTheme();
+      loadConfig();
+      loadSavedContent();
+      render();
+    }
+    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'complete') {
+      init();
+    }
+
+    // Atajos de teclado
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+          case 's':
+            e.preventDefault();
+            exportPDF();
+            break;
+          case 'p':
+            e.preventDefault();
+            window.print();
+            break;
+          case 'o':
+            e.preventDefault();
+            document.getElementById('file').click();
+            break;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
